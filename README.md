@@ -18,25 +18,25 @@
 |-------------|---------|------|
 | Python | 3.12 | Langage principal |
 | Django | 6.0.3 | Framework web |
-| Django REST Framework | 3.15 | API REST (349 endpoints) |
-| PostgreSQL | 18.x | Base de données principale |
-| Simple JWT | 5.x | Authentification JWT (access + refresh) |
-| drf-spectacular | 0.27 | Documentation OpenAPI 3.0 |
-| Celery + Beat | 5.x | Tâches planifiées et workflows asynchrones |
-| django-import-export | 4.x | Import/export CSV/Excel dans l'admin |
-| Jazzmin | 3.x | Thème admin Django professionnel |
+| Django REST Framework | 3.17.0 | API REST (349 endpoints) |
+| PostgreSQL | 18.3 | Base de données principale |
+| Simple JWT | 5.5.1 | Authentification JWT (access + refresh) |
+| drf-spectacular | 0.29.0 | Documentation OpenAPI 3.0 |
+| Celery + Beat | 5.6.2 / 2.9.0 | Tâches planifiées et workflows asynchrones |
+| django-import-export | 4.4.0 | Import/export CSV/Excel dans l'admin |
+| Jazzmin | 3.0.4 | Thème admin Django professionnel |
 
 ### Frontend
 | Technologie | Version | Rôle |
 |-------------|---------|------|
-| Vue 3 | 3.5 | Framework UI (Composition API) |
-| TypeScript | 5.7 | Typage statique |
-| Vite | 6.x | Bundler |
-| Pinia | 2.x | Gestion d'état |
-| Vue Router | 4.x | Routage SPA |
-| Axios | 1.x | Client HTTP |
-| lucide-vue-next | 0.x | Bibliothèque d'icônes |
-| Chart.js | 4.x | Graphiques et visualisations |
+| Vue 3 | 3.5.34 | Framework UI (Composition API) |
+| TypeScript | 6.0.2 | Typage statique |
+| Vite | 8.0.12 | Bundler |
+| Pinia | 3.0.4 | Gestion d'état |
+| Vue Router | 4.6.4 | Routage SPA |
+| Axios | 1.16.0 | Client HTTP |
+| lucide-vue-next | 1.0.0 | Bibliothèque d'icônes |
+| Chart.js | 4.5.1 | Graphiques et visualisations |
 
 ### Infrastructure
 | Composant | Détail |
