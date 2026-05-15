@@ -73,12 +73,18 @@ class DataSourceViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, CanViewDataSources]
         return [permission() for permission in permission_classes]
     
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return created_response(serializer.data, "Source de données créée avec succès")
+
     def perform_create(self, serializer):
         instance = serializer.save(owner=self.request.user)
         instance._request = self.request
         return instance
-    
-    @action(detail=True, methods=['post'])
+
+    @action(detail=True, methods=['post'], url_path='test-connection')
     def test_connection(self, request, pk=None):
         """Teste la connexion à la source de données"""
         source = self.get_object()

@@ -175,7 +175,7 @@ class ETLPipelineAdmin(ImportExportModelAdmin):
         success_rate = obj.success_rate
         color = 'success' if success_rate >= 90 else 'warning' if success_rate >= 50 else 'danger'
         return format_html(
-            '<div><span class="badge bg-{}">{:.0f}%</span></div>'
+            '<div><span class="badge bg-{}">{}</span></div>'
             '<div><small>{}</small></div>',
             color, success_rate, obj.execution_count
         )

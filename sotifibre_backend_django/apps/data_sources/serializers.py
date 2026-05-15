@@ -117,7 +117,7 @@ class DataSourceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataSource
         fields = [
-            'name', 'description', 'source_type', 'database_type',
+            'id', 'name', 'description', 'source_type', 'database_type',
             'connection_string', 'host', 'port', 'database_name', 'schema_name',
             'username', 'password', 'api_url', 'api_endpoint', 'api_headers',
             'api_params', 'file_path', 'file_url', 'file_encoding', 'file_delimiter',
@@ -126,6 +126,7 @@ class DataSourceCreateSerializer(serializers.ModelSerializer):
             'use_ssl', 'ssl_certificate', 'sync_frequency', 'auto_refresh_enabled',
             'tags', 'category', 'business_domain', 'owner_team'
         ]
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         # Le mot de passe sera chiffré dans le service
