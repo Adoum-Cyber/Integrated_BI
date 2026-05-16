@@ -204,7 +204,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "100/hour",
         "user": "1000/hour",
-        "login": "10/minute",
+        "login": "60/minute",
         "scan": "50/day",
     },
     "EXCEPTION_HANDLER": "apps.core.exceptions.custom_exception_handler",

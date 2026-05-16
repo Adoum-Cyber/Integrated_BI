@@ -598,7 +598,9 @@ class Report(BaseModel):
     # Source
     dashboard = models.ForeignKey(
         Dashboard,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='reports',
         verbose_name='Tableau de bord source'
     )

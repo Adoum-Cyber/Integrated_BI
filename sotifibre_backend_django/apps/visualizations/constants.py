@@ -62,14 +62,13 @@ REFRESH_FREQUENCIES = [
 # FORMATS D'EXPORT
 # ============================================================================
 EXPORT_FORMATS = [
-    ('png', '🖼️ PNG (Image)'),
-    ('svg', '📐 SVG (Vectoriel)'),
-    ('pdf', '📄 PDF (Document)'),
-    ('csv', '📊 CSV (Tableur)'),
+    ('pdf',   '📄 PDF (Document)'),
     ('excel', '📈 Excel (XLSX)'),
-    ('json', '🔧 JSON (API)'),
-    ('html', '🌐 HTML (Web)'),
-    ('markdown', '📝 Markdown'),
+    ('csv',   '📊 CSV (Tableur)'),
+    ('tsv',   '📑 TSV (Tabulé)'),
+    ('yaml',  '📋 YAML'),
+    ('html',  '🌐 HTML (Web)'),
+    ('json',  '🔧 JSON (API)'),
 ]
 
 # ============================================================================

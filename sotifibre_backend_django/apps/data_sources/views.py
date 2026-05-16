@@ -219,7 +219,12 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         )
         
         total_queries = queryset.aggregate(Sum('total_queries'))['total_queries__sum'] or 0
-        avg_success_rate = queryset.aggregate(Avg('success_rate'))['success_rate__avg'] or 0
+        agg = queryset.aggregate(
+            total_q=Sum('total_queries'),
+            total_ok=Sum('successful_queries'),
+        )
+        t, ok = agg['total_q'] or 0, agg['total_ok'] or 0
+        avg_success_rate = round((ok / t) * 100, 1) if t else 0
         
         stats_data = {
             'total': total,
@@ -540,13 +545,18 @@ class DataSourceFileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, CanManageDataSources]
     pagination_class = StandardPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['original_name', 'notes']
+    search_fields = ['name', 'original_name', 'notes']
     ordering_fields = ['created_at', 'file_size']
     ordering = ['-created_at']
-    
+
     def perform_create(self, serializer):
-        """Crée un fichier avec l'utilisateur connecté"""
-        serializer.save(uploaded_by=self.request.user)
+        import os
+        file = serializer.validated_data.get('file')
+        original_name = file.name if file else ''
+        serializer.save(
+            uploaded_by=self.request.user,
+            original_name=original_name,
+        )
     
     @action(detail=True, methods=['post'])
     def process(self, request, pk=None):
@@ -556,17 +566,30 @@ class DataSourceFileViewSet(viewsets.ModelViewSet):
         # Logique de traitement
         try:
             import pandas as pd
-            from io import BytesIO
-            
-            # Lire le fichier
-            if file_obj.file.name.endswith('.csv'):
+
+            fname = (file_obj.file.name or '').lower()
+            if fname.endswith('.csv'):
                 df = pd.read_csv(file_obj.file, encoding=file_obj.encoding or 'utf-8')
-            elif file_obj.file.name.endswith(('.xlsx', '.xls')):
+            elif fname.endswith(('.xlsx', '.xls')):
                 df = pd.read_excel(file_obj.file, sheet_name=file_obj.sheet_name or 0)
-            elif file_obj.file.name.endswith('.json'):
+            elif fname.endswith('.json'):
                 df = pd.read_json(file_obj.file)
+            elif fname.endswith('.tsv'):
+                df = pd.read_csv(file_obj.file, sep='\t', encoding=file_obj.encoding or 'utf-8')
+            elif fname.endswith(('.yaml', '.yml')):
+                import yaml
+                raw = yaml.safe_load(file_obj.file.read())
+                if isinstance(raw, list):
+                    df = pd.DataFrame(raw)
+                elif isinstance(raw, dict):
+                    df = pd.DataFrame([raw])
+                else:
+                    return error_response("Format YAML invalide : liste ou dictionnaire attendu")
+            elif fname.endswith(('.html', '.htm')):
+                tables = pd.read_html(file_obj.file)
+                df = tables[0] if tables else pd.DataFrame()
             else:
-                return error_response(f"Format non supporté: {file_obj.file.name}")
+                return error_response(f"Format non supporté : {file_obj.file.name}")
             
             # Mettre à jour les informations
             file_obj.row_count = len(df)
@@ -594,15 +617,25 @@ class DataSourceFileViewSet(viewsets.ModelViewSet):
     def preview(self, request, pk=None):
         """Aperçu des données du fichier"""
         file_obj = self.get_object()
-        
+
         if not file_obj.preview_data:
-            return error_response("Aucune donnée d'aperçu disponible. Traitez d'abord le fichier.")
-        
+            return error_response("Aucune donnée disponible — traitez d'abord le fichier.")
+
+        preview_rows = file_obj.preview_data
+        # Normaliser : liste de dicts → headers + rows (listes)
+        if preview_rows and isinstance(preview_rows[0], dict):
+            headers = list(preview_rows[0].keys())
+            rows = [[row.get(h) for h in headers] for row in preview_rows]
+        else:
+            headers = []
+            rows = preview_rows
+
         return success_response({
-            'preview': file_obj.preview_data,
-            'schema': file_obj.schema,
-            'row_count': file_obj.row_count,
-            'column_count': file_obj.column_count
+            'headers':    headers,
+            'rows':       rows,
+            'schema':     file_obj.schema,
+            'row_count':  file_obj.row_count,
+            'column_count': file_obj.column_count,
         }, "Aperçu récupéré")
 
 
@@ -650,7 +683,7 @@ class PowerQueryViewSet(viewsets.ModelViewSet):
 
 class DataSourceConnectionViewSet(viewsets.ModelViewSet):
     """ViewSet pour DataSourceConnection"""
-    
+
     queryset = DataSourceConnection.objects.all().select_related('data_source')
     serializer_class = DataSourceConnectionSerializer
     permission_classes = [IsAuthenticated, CanManageDataSources]
@@ -658,40 +691,85 @@ class DataSourceConnectionViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['host', 'database_name']
     ordering = ['data_source__name']
-    
+
+    # ── Mapping connection_type → source_type ──────────────
+    _SRC_MAP = {
+        'postgresql': 'postgresql', 'mysql': 'mysql',
+        'mssql': 'sqlserver', 'oracle': 'oracle',
+        'sqlite': 'sqlite', 'mongodb': 'mongodb',
+        'redis': 'redis',
+    }
+    _DEFAULT_PORTS = {
+        'postgresql': 5432, 'mysql': 3306, 'mssql': 1433,
+        'oracle': 1521, 'sqlite': 0, 'mongodb': 27017, 'redis': 6379,
+    }
+
+    def _ensure_data_source(self, data, user):
+        """Crée un DataSource automatiquement si non fourni dans le payload."""
+        if 'data_source' in data and data['data_source']:
+            return data
+        from apps.data_sources.models import DataSource as DS
+        conn_type = data.get('connection_type', 'postgresql')
+        source_type = self._SRC_MAP.get(conn_type, 'postgresql')
+        ds = DS.objects.create(
+            name=data.get('name', data.get('host', 'Connexion')),
+            source_type=source_type,
+            database_type=conn_type,
+            host=data.get('host', ''),
+            port=int(data['port']) if data.get('port') else None,
+            database_name=data.get('database_name', ''),
+            username=data.get('username', ''),
+            password=data.get('password', ''),
+            description=data.get('description', ''),
+            status='draft',
+            owner=user,
+        )
+        data = dict(data)
+        data['data_source'] = str(ds.id)
+        return data
+
+    def create(self, request, *args, **kwargs):
+        data = self._ensure_data_source(request.data.copy(), request.user)
+        # Injecter le port par défaut selon le type si absent
+        if not data.get('port'):
+            conn_type = data.get('connection_type', 'postgresql')
+            data['port'] = self._DEFAULT_PORTS.get(conn_type, 5432)
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return created_response(serializer.data, "Connexion créée avec succès")
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Mettre à jour aussi le nom du DataSource si fourni
+        name = request.data.get('name')
+        if name and instance.data_source_id:
+            from apps.data_sources.models import DataSource as DS
+            DS.objects.filter(id=instance.data_source_id).update(name=name)
+        return super().partial_update(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def test(self, request, pk=None):
-        """Teste la connexion"""
+        """Teste la connexion — retourne 422 si la connexion échoue."""
         connection = self.get_object()
-        
         try:
             import sqlalchemy
             from sqlalchemy import create_engine, text
-            
-            # Construire la chaîne de connexion
             if connection.connection_string:
                 conn_str = connection.connection_string
             else:
-                conn_str = f"{connection.data_source.database_type}://{connection.username}:{connection.password}@{connection.host}:{connection.port}/{connection.database_name}"
-            
-            engine = create_engine(conn_str, connect_args={'connect_timeout': 10})
-            
+                db_type = getattr(connection.data_source, 'database_type', None) or 'postgresql'
+                conn_str = f"{db_type}://{connection.username}:{connection.password}@{connection.host}:{connection.port}/{connection.database_name}"
+            engine = create_engine(conn_str, connect_args={'connect_timeout': 5})
             with engine.connect() as conn:
-                result = conn.execute(text("SELECT 1"))
-                row = result.fetchone()
-                
-                if row and row[0] == 1:
-                    connection.is_connected = True
-                    connection.last_connected = timezone.now()
-                    connection.connection_test_result = {'success': True, 'message': 'Connexion réussie'}
-                    connection.save()
-                    
-                    return success_response({'success': True}, "Connexion réussie")
-            
-            return error_response("La requête de test a échoué", status_code=500)
-            
+                conn.execute(text("SELECT 1"))
+            connection.is_connected = True
+            connection.last_connected = timezone.now()
+            connection.connection_test_result = {'success': True, 'message': 'Connexion réussie'}
+            connection.save()
+            return success_response({'success': True}, "Connexion réussie")
         except Exception as e:
             connection.is_connected = False
             connection.connection_test_result = {'success': False, 'error': str(e)}
             connection.save()
-            return error_response(f"Échec de connexion: {str(e)}", status_code=500)
+            return error_response(f"Échec de connexion: {str(e)}", status_code=422)

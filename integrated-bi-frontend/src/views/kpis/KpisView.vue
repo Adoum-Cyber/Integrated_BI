@@ -239,7 +239,7 @@ async function deleteKpi(id: string | number) {
 function openDrawer() {
   editKpi.value = null
   form.value = {
-    name: '', domain: 'ventes', value: '', target: '', unit: '', description: '',
+    name: '', domain: 'number', value: '', target: '', unit: '', description: '',
     warning_threshold: '', critical_threshold: '',
     formula: '', format_string: '', decimal_places: '2',
     track_trend: false, trend_period: 'monthly',
@@ -270,14 +270,15 @@ async function submitForm() {
   if (!form.value.name.trim() || !form.value.target) return
   submitting.value = true
   const t = parseFloat(form.value.target)
+  const VALID_KPI_TYPES = ['number', 'percentage', 'currency', 'ratio', 'trend', 'comparison']
   const payload: Record<string, any> = {
     name:              form.value.name,
-    kpi_type:          form.value.domain || 'number',
+    kpi_type:          VALID_KPI_TYPES.includes(form.value.domain) ? form.value.domain : 'number',
     target_value:      t,
     unit:              form.value.unit,
     description:       form.value.description,
-    formula:           form.value.formula || null,
-    format_string:     form.value.format_string || null,
+    formula:           form.value.formula || '',
+    format_string:     form.value.format_string || '',
     decimal_places:    form.value.decimal_places ? parseInt(form.value.decimal_places) : 2,
     track_trend:       form.value.track_trend,
     trend_period:      form.value.trend_period,
@@ -303,7 +304,7 @@ async function submitForm() {
 }
 
 function mapKpi(k: any): KpiDef {
-  const statusMap: Record<string, string> = { success: 'achieved', warning: 'at_risk', critical: 'critical' }
+  const statusMap: Record<string, string> = { success: 'achieved', warning: 'at_risk', critical: 'critical', unknown: 'on_track' }
   return {
     id:                 k.id,
     name:               k.name,
@@ -313,7 +314,7 @@ function mapKpi(k: any): KpiDef {
     unit:               k.unit || '',
     trend_dir:          k.trend_direction || 'stable',
     trend_pct:          k.trend_percentage ?? 0,
-    status:             statusMap[k.status] ?? k.status ?? 'on_track',
+    status:             statusMap[k.status] ?? (STATUS_META[k.status] ? k.status : 'on_track'),
     sparkline:          [],
     updated_at:         k.updated_at || k.last_calculated || new Date().toISOString(),
     description:        k.description,
