@@ -52,12 +52,17 @@ DimensionalSchema.objects.all().delete()
 Measure.objects.all().delete()
 ExecutionLog.objects.all().delete()
 ETLPipeline.objects.all().delete()
-# IMPORTANT: enfants AVANT parents pour respecter les FK
-DataWarehouseLog.objects.all().delete()       # FK → DataWarehouseTable
-DataWarehouseMetric.objects.all().delete()    # FK → DataWarehouseTable
-AggregationTable.objects.all().delete()       # FK → DataWarehouseTable
-DataWarehouseTable.objects.all().delete()
-DataWarehouseSchema.objects.all().delete()
+
+# DATA WAREHOUSE : TRUNCATE CASCADE en SQL brut.
+# Un signal Django post_delete sur DataWarehouseTable RE-CREE un log en cascade,
+# ce qui rend impossible un .delete() en chaîne. TRUNCATE CASCADE bypasse les
+# signaux ORM et gère les FK automatiquement.
+from django.db import connection
+with connection.cursor() as cursor:
+    # CASCADE = PG vide automatiquement toutes les tables qui ont une FK vers celles-ci.
+    # Pas besoin de lister les enfants (logs, metrics, aggregations, attributes, etc).
+    cursor.execute("TRUNCATE TABLE data_warehouse_schemas RESTART IDENTITY CASCADE;")
+print("  [OK] Tables Data Warehouse vidées (TRUNCATE CASCADE)")
 DataTable.objects.all().delete()
 DataSource.objects.all().delete()
 Team.objects.all().delete()
