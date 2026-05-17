@@ -100,7 +100,9 @@ services:
     runtime: static
     region: frankfurt
     rootDir: integrated-bi-frontend
-    buildCommand: "npm ci && npm run build"
+    # ⚠️ Vite 8 utilise rolldown (Rust) + a un bug npm sur optional deps Linux.
+    # → npm install (pas npm ci) + Node 22.12+ obligatoire (Vite 8 minimum).
+    buildCommand: "npm install --include=optional && npm run build"
     staticPublishPath: ./dist
     autoDeploy: true
     pullRequestPreviewsEnabled: false
@@ -109,8 +111,9 @@ services:
       # ⚠️ Le code lit `import.meta.env.VITE_API_URL` (et PAS VITE_API_BASE_URL).
       - key: VITE_API_URL
         value: "https://sotifibre-backend.onrender.com"
+      # ⚠️ Vite 8 exige Node 20.19+ ou 22.12+. 20.18.0 plante (rolldown native binding).
       - key: NODE_VERSION
-        value: "20.18.0"
+        value: "22.12.0"
 
     headers:
       # Cache long pour les assets hashés Vite

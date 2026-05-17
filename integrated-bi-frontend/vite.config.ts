@@ -19,4 +19,21 @@ export default defineConfig({
       },
     },
   },
+  // ─── Build prod (Render free tier = 512Mo, on optimise la mémoire) ──────
+  build: {
+    target: 'es2020',
+    sourcemap: false,           // pas de source maps en prod = moins de RAM
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Découpe les grosses libs dans des chunks séparés → moins de RAM
+          // par fichier à compresser, et meilleur cache navigateur.
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'chart-vendor': ['chart.js', 'vue-chartjs'],
+          'ui-vendor': ['@headlessui/vue', 'lucide-vue-next', '@vueuse/core'],
+        },
+      },
+    },
+  },
 })
