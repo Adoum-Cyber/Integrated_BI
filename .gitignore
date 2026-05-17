@@ -57,3 +57,7 @@ _tmp_Integrated_BI/
 *.pdf
 *.exe
 *.webp
+
+# ── TestSprite ──────────────────────────────────────────────
+testsprite_tests/
+PRD_TestSprite.md
