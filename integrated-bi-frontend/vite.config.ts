@@ -26,12 +26,14 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Découpe les grosses libs dans des chunks séparés → moins de RAM
-          // par fichier à compresser, et meilleur cache navigateur.
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'chart-vendor': ['chart.js', 'vue-chartjs'],
-          'ui-vendor': ['@headlessui/vue', 'lucide-vue-next', '@vueuse/core'],
+        // Vite 8 utilise rolldown qui exige manualChunks en FONCTION (pas en objet).
+        // Découpe les grosses libs dans des chunks séparés → meilleur cache navigateur.
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (id.includes('chart.js') || id.includes('vue-chartjs')) return 'chart-vendor'
+            if (id.includes('@headlessui') || id.includes('lucide-vue') || id.includes('@vueuse')) return 'ui-vendor'
+            if (id.includes('/vue/') || id.includes('vue-router') || id.includes('pinia')) return 'vue-vendor'
+          }
         },
       },
     },
