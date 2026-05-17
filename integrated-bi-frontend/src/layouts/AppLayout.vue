@@ -99,8 +99,12 @@ watch(() => route.path, () => {
 }
 
 @media (max-width: 768px) {
-  .app-shell { grid-template-columns: 0 1fr; }
-  .app-shell--collapsed { grid-template-columns: 0 1fr; }
+  /* Sidebar is position: fixed on mobile (out of grid flow), so the grid
+     becomes single-column to let .app-right take the full viewport width. */
+  .app-shell,
+  .app-shell--collapsed {
+    grid-template-columns: 1fr;
+  }
 
   .mobile-backdrop {
     display: block;
