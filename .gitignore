@@ -102,3 +102,6 @@ les prompts pour les*
 # Scripts ad-hoc créés pour le nettoyage
 cleanup_repo.py
 generate_chapter5.py
+
+# Claude Code local settings
+.claude/

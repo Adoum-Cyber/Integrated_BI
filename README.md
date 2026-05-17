@@ -1,7 +1,28 @@
-# Integrated BI Platform — Sotifibre
+# Integrated BI Platform — SOTIFibre
 
-> **Projet de Fin d'Études (PFE) — 2026**  
+> **Projet de Fin d'Études (PFE) — 2026** — Abdoulaye Adoum
 > Plateforme de Business Intelligence full-stack pour l'analyse de données d'entreprise
+
+---
+
+## 🚀 Démo en production
+
+| Service | URL | Statut |
+|---|---|---|
+| **Frontend** | https://sotifibre-frontend.onrender.com | 🟢 En ligne |
+| **Backend API** | https://sotifibre-backend.onrender.com | 🟢 En ligne |
+| **Swagger UI** | https://sotifibre-backend.onrender.com/api/docs/ | 🟢 |
+| **Admin Django** | https://sotifibre-backend.onrender.com/admin/ | 🟢 |
+
+> ⚠️ Le backend est hébergé sur le plan **Free** de Render, qui met le service en veille après 15 minutes d'inactivité. Le premier accès après une période d'inactivité peut prendre **20–30 secondes** (cold start). Les accès suivants sont instantanés.
+
+### Comptes de démonstration
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| Superadmin | admin@sotifibre.dz | `SOTIFibre@2026!` |
+| Développeur BI | dev.bi@sotifibre.dz | `SOTIFibre@2026!` |
+| Analyste BI | analyste@sotifibre.dz | `SOTIFibre@2026!` |
+| Direction | direction@sotifibre.dz | `SOTIFibre@2026!` |
 
 ---
 
@@ -339,6 +360,86 @@ suites Playwright :
 - **~95 % de réussite** (échec restant : `validate POST` qui nécessite redéploiement backend du fix `views.py`)
 - **21 captures d'écran** générées automatiquement
 - **1 migration Django** (`0005_export_formats_strict_6`) à appliquer pour finaliser
+
+---
+
+## Suite de tests TestSprite MCP (2026)
+
+Une seconde campagne de tests automatisés a été menée avec **TestSprite MCP** (génération AI + exécution Playwright headless), exécutée directement contre la version déployée sur Render. Détails dans [`TESTING_REPORT.md`](TESTING_REPORT.md).
+
+### Frontend (E2E)
+
+| | Run initial | Après fixes |
+|---|---|---|
+| Tests | 30 | 30 |
+| ✅ Pass | 23 (76,7 %) | **28 (93,3 %)** |
+| ❌ Fail | 6 | 1* |
+| 🚧 Blocked | 1 | 1 |
+
+\* L'échec restant est dû à une donnée seed (source mock non joignable), pas à un bug applicatif.
+
+### Backend (API directe)
+
+| Round | Tests | Pass | Commentaire |
+|---|---|---|---|
+| 1 | 1 | 0 | Plan minimal, peu utile |
+| 2 | 10 | **7 (70 %)** | PRD manuel détaillé — round canonique |
+| 3 | 10 | 2 | OpenAPI brut — moins efficace sur Starter |
+
+### Bugs détectés et corrigés pendant TestSprite
+
+| Test | Cause | Fix |
+|---|---|---|
+| TC023 — Execute SQL 404 | `id` manquant dans la réponse de création de `DataQuery` | `id` ajouté en read-only au `DataQueryCreateSerializer` |
+| TC017 — Pipeline edit invalide | Form pré-rempli avec `source_name` (libellé) au lieu de `source` (UUID) | Hydratation correcte depuis le pipeline |
+| TC027 — Notifs pipeline non persistées | Form écrasait toujours `notifications_enabled: false` à l'ouverture | Lecture des champs depuis le pipeline |
+| TC019 — Bouton « Tout marquer lu » disabled | `unreadCount` lisait `res.data.count` au lieu de `res.data.data.count` | Lecture défensive multi-format |
+| TC021 — Widget create silencieux | `catch { /* ignore */ }` masquait la 400 backend | Surface des erreurs + validation dashboard requis |
+| TC030 — Star Schema modal sans erreur | Idem silent fail | Bandeau d'erreur dans le modal |
+| TC023 (round 2) — Execute 500 | `parameters` (JSONField default=list) déballé avec `**` → TypeError non gérée | Guard `isinstance(dict)` + wrap exception en 400 |
+
+---
+
+## Déploiement (production)
+
+### Plateforme : Render.com
+
+Le projet est déployé en continu sur Render avec auto-redéploiement à chaque push sur `master`.
+
+#### Backend — Web Service
+- **Build Command** : `./build.sh`
+- **Start Command** : `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --preload --max-requests 500 --max-requests-jitter 50`
+- **Plan** : Free (512 Mo RAM, 0.1 CPU)
+- **Région** : Frankfurt EU Central
+- **Health Check** : `/api/health/`
+
+#### Frontend — Static Site
+- **Build Command** : `npm install && npm run build`
+- **Publish Directory** : `dist`
+- **Variable** : `VITE_API_URL=https://sotifibre-backend.onrender.com`
+
+#### Base de données — PostgreSQL managée
+- Provisionnée par Render
+- `DATABASE_URL` injecté automatiquement dans les env vars du backend
+
+### Choix critiques
+
+- **`--workers 1 --preload`** : avec le plan Free (512 Mo), les librairies ML (prophet, xgboost, sklearn, scipy, pandas) seraient dupliquées par worker. Preload force le master à tout charger une fois, puis fork → mémoire partagée.
+- **Routing hash côté frontend** (`createWebHashHistory`) : élimine définitivement les 404 sur refresh des routes profondes sur Render Static Site, sans configuration de rewrite.
+- **Redirection `/` → `/admin/` côté backend** : le health-checker Render poll `/` ; sans route racine, il marquerait le service unhealthy.
+
+---
+
+## Documentation
+
+| Fichier | Contenu |
+|---|---|
+| [`README.md`](README.md) | Ce document (présentation générale) |
+| [`TESTING_REPORT.md`](TESTING_REPORT.md) | Rapport détaillé TestSprite (3 rounds, fixes, métriques) |
+| [`sotifibre_backend_django/README.md`](sotifibre_backend_django/README.md) | README backend (Django) |
+| [`integrated-bi-frontend/README.md`](integrated-bi-frontend/README.md) | README frontend (Vue) |
+| [`sotifibre_backend_django/docs/`](sotifibre_backend_django/docs/) | Documentation technique modulaire |
+| [`SOTIFibre Platform API (v1).yaml`](SOTIFibre%20Platform%20API%20%28v1%29.yaml) | Spec OpenAPI 3.0 complète |
 
 ---
 
