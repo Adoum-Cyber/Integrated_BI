@@ -42,32 +42,32 @@ from apps.notifications.models import Notification
 # ---------------------------------------------------------
 print("\n[0/14] Nettoyage des donnees existantes...")
 
-Favorite.objects.all().delete()
-Notification.objects.all().delete()
-Report.objects.all().delete()
-Widget.objects.all().delete()
-KPI.objects.all().delete()
-Dashboard.objects.all().delete()
-DimensionalSchema.objects.all().delete()
-Measure.objects.all().delete()
-ExecutionLog.objects.all().delete()
-ETLPipeline.objects.all().delete()
-
-# DATA WAREHOUSE : TRUNCATE CASCADE en SQL brut.
-# Un signal Django post_delete sur DataWarehouseTable RE-CREE un log en cascade,
-# ce qui rend impossible un .delete() en chaîne. TRUNCATE CASCADE bypasse les
-# signaux ORM et gère les FK automatiquement.
+# Nettoyage TRUNCATE CASCADE : bypass les signaux post_delete qui créent
+# des logs en boucle (data_source_logs, data_warehouse_logs, etc.) et causent
+# des ForeignKeyViolation au commit. PostgreSQL CASCADE gère les FK enfants
+# automatiquement, sans déclencher les signaux Django.
 from django.db import connection
 with connection.cursor() as cursor:
-    # CASCADE = PG vide automatiquement toutes les tables qui ont une FK vers celles-ci.
-    # Pas besoin de lister les enfants (logs, metrics, aggregations, attributes, etc).
-    cursor.execute("TRUNCATE TABLE data_warehouse_schemas RESTART IDENTITY CASCADE;")
-print("  [OK] Tables Data Warehouse vidées (TRUNCATE CASCADE)")
-DataTable.objects.all().delete()
-DataSource.objects.all().delete()
-Team.objects.all().delete()
+    cursor.execute("""
+        TRUNCATE TABLE
+            data_sources,
+            data_warehouse_schemas,
+            etl_pipelines,
+            dimensional_schemas,
+            dashboards,
+            kpis,
+            widgets,
+            reports,
+            favorites,
+            notifications,
+            ml_models,
+            teams
+        RESTART IDENTITY CASCADE;
+    """)
+print("  [OK] Tables métier vidées (TRUNCATE CASCADE)")
+# User: on garde la table mais on supprime les non-admin (à part le superuser système)
 User.objects.filter(is_superuser=False).delete()
-User.objects.exclude(email='admin@admin.com').filter(is_superuser=True).delete()
+User.objects.exclude(email='admin@sotifibre.dz').filter(is_superuser=True).delete()
 print("  [OK] Donnees existantes supprimees")
 
 # ---------------------------------------------------------
