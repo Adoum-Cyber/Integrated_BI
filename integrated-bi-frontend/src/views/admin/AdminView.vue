@@ -2449,6 +2449,11 @@ onMounted(() => { fetchUsers(); fetchActivities(); fetchTeams(); fetchUserStats(
   .uth:nth-child(4), .utd:nth-child(4) { display: none; }
 }
 
+@media (max-width: 480px) {
+  .stat-cell { min-width: 100%; }
+  .stats-strip { gap: var(--sp-2); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .user-row, .audit-entry { animation: none; opacity: 1; transform: none; }
 }

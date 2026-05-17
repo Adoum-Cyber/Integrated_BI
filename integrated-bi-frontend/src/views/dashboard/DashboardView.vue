@@ -848,6 +848,12 @@ onMounted(() => {
   }
 }
 
+@media (max-width: 600px) {
+  .kpi-rail { grid-template-columns: 1fr; }
+  .chart-wrap--lg { height: 200px; }
+  .chart-wrap--md { height: 160px; }
+}
+
 @media (max-width: 480px) {
   .dashboard { padding: var(--sp-4); }
 }
