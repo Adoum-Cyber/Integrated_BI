@@ -493,13 +493,19 @@ const userName = computed(() => {
     left: 0;
     width: 260px;
     height: 100dvh;
-    transform: translateX(-100%);
-    transition: transform 280ms var(--ease-out-quart);
+    transform: translate3d(-100%, 0, 0);
+    transition: transform 280ms var(--ease-out-quart), visibility 0s linear 280ms;
     z-index: var(--z-modal);
     box-shadow: var(--shadow-xl);
+    visibility: hidden;
+    pointer-events: none;
+    will-change: transform;
   }
   .sidebar--mobile-open {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform 280ms var(--ease-out-quart), visibility 0s linear 0s;
   }
   /* Inside the drawer, labels always visible regardless of collapsed state */
   .sidebar .sidebar-label {
@@ -508,6 +514,10 @@ const userName = computed(() => {
   }
   /* Hide desktop collapse toggle on mobile */
   .collapse-btn {
+    display: none;
+  }
+  /* Hide the subtle right border on mobile (drawer has its own shadow) */
+  .sidebar::after {
     display: none;
   }
 }
