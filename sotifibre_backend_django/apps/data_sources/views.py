@@ -326,23 +326,30 @@ class DataQueryViewSet(viewsets.ModelViewSet):
     def execute(self, request, pk=None):
         """Exécute la requête"""
         query = self.get_object()
-        
+
         if not query.is_public and query.created_by != request.user and not request.user.is_admin:
             return forbidden_response(
                 "Vous n'avez pas accès à cette requête",
                 required_permission="is_owner_or_admin"
             )
-        
-        service = QueryService(query)
-        result = service.execute(request.data.get('params'))
-        
-        if result['success']:
-            return success_response(result, "Requête exécutée avec succès")
-        else:
+
+        # Toute exception remontant du service est transformée en 400 propre côté API
+        # plutôt qu'en 500 — ex: connexion DB échouée, paramètres mal typés, etc.
+        try:
+            service = QueryService(query)
+            result = service.execute(request.data.get('params'))
+        except Exception as exc:  # noqa: BLE001 — on convertit en réponse utilisateur
             return error_response(
-                f"Erreur d'exécution: {result.get('error')}",
+                f"Erreur d'exécution: {exc}",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
+
+        if result.get('success'):
+            return success_response(result, "Requête exécutée avec succès")
+        return error_response(
+            f"Erreur d'exécution: {result.get('error', 'inconnue')}",
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     @action(detail=True, methods=['post'])
     def toggle_favorite(self, request, pk=None):
