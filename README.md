@@ -5,16 +5,16 @@
 
 ---
 
-## 🚀 Démo en production
+## Démo en production
 
 | Service | URL | Statut |
 |---|---|---|
-| **Frontend** | https://sotifibre-frontend.onrender.com | 🟢 En ligne |
-| **Backend API** | https://sotifibre-backend.onrender.com | 🟢 En ligne |
-| **Swagger UI** | https://sotifibre-backend.onrender.com/api/docs/ | 🟢 |
-| **Admin Django** | https://sotifibre-backend.onrender.com/admin/ | 🟢 |
+| **Frontend** | https://sotifibre-frontend.onrender.com | En ligne |
+| **Backend API** | https://sotifibre-backend.onrender.com | En ligne |
+| **Swagger UI** | https://sotifibre-backend.onrender.com/api/docs/ | En ligne |
+| **Admin Django** | https://sotifibre-backend.onrender.com/admin/ | En ligne |
 
-> ⚠️ Le backend est hébergé sur le plan **Free** de Render, qui met le service en veille après 15 minutes d'inactivité. Le premier accès après une période d'inactivité peut prendre **20–30 secondes** (cold start). Les accès suivants sont instantanés.
+> **Note** : Le backend est hébergé sur le plan **Free** de Render, qui met le service en veille après 15 minutes d'inactivité. Le premier accès après une période d'inactivité peut prendre **20–30 secondes** (cold start). Les accès suivants sont instantanés.
 
 ### Comptes de démonstration
 | Rôle | Email | Mot de passe |
@@ -178,16 +178,16 @@ Integrated_BI/
 
 | Suite | Tests | Statut |
 |-------|-------|--------|
-| Authentification | 2 | ✅ |
-| Sources de données | 8 | ✅ |
-| Connexions DB | 9 | ✅ |
-| Fichiers | 12 | ✅ |
-| KPIs | 9/10 | ✅ (1 skip) |
-| Dashboards | 9 | ✅ |
-| Rapports | 13 | ✅ |
-| Administration | 11 | ✅ |
-| Navigation | 6 | ✅ |
-| Dashboard général | 7 | ✅ |
+| Authentification | 2 | Pass |
+| Sources de données | 8 | Pass |
+| Connexions DB | 9 | Pass |
+| Fichiers | 12 | Pass |
+| KPIs | 9/10 | Pass (1 skip) |
+| Dashboards | 9 | Pass |
+| Rapports | 13 | Pass |
+| Administration | 11 | Pass |
+| Navigation | 6 | Pass |
+| Dashboard général | 7 | Pass |
 
 ---
 
@@ -372,9 +372,9 @@ Une seconde campagne de tests automatisés a été menée avec **TestSprite MCP*
 | | Run initial | Après fixes |
 |---|---|---|
 | Tests | 30 | 30 |
-| ✅ Pass | 23 (76,7 %) | **28 (93,3 %)** |
-| ❌ Fail | 6 | 1* |
-| 🚧 Blocked | 1 | 1 |
+| Pass | 23 (76,7 %) | **28 (93,3 %)** |
+| Fail | 6 | 1* |
+| Blocked | 1 | 1 |
 
 \* L'échec restant est dû à une donnée seed (source mock non joignable), pas à un bug applicatif.
 
