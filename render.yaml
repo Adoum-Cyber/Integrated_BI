@@ -24,7 +24,9 @@ services:
     region: frankfurt
     rootDir: sotifibre_backend_django
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
+    # ⚠️ Plan free Render = 512Mo RAM. ML libs (prophet/xgboost/sklearn) sont lourds.
+    # → 1 worker, --preload (fork après imports = mémoire partagée), recyclage régulier.
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 --preload --max-requests 500 --max-requests-jitter 50"
     healthCheckPath: /api/health/
     autoDeploy: true
     # ⚠️ Ne change PAS startCommand dans le dashboard Render.
