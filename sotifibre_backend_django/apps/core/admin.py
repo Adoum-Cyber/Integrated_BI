@@ -4,6 +4,7 @@ Core Admin - Configuration de la plateforme Sotifibre BI
 """
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.contrib import messages
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources, fields
@@ -187,8 +188,8 @@ class ConfigAdmin(ImportExportModelAdmin):
     def encrypted_indicator(self, obj):
         """Indicateur de chiffrement"""
         if obj.is_encrypted:
-            return format_html('<span class="badge bg-warning" title="Donnée chiffrée">🔒 Chiffré</span>')
-        return format_html('<span class="badge bg-success" title="Donnée en clair">🔓 Clair</span>')
+            return mark_safe('<span class="badge bg-warning" title="Donnée chiffrée">🔒 Chiffré</span>')
+        return mark_safe('<span class="badge bg-success" title="Donnée en clair">🔓 Clair</span>')
     encrypted_indicator.short_description = 'Sécurité'
     
     def value_formatted(self, obj):
