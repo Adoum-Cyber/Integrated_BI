@@ -45,4 +45,32 @@ else
   echo "─── Superuser bootstrap skipped (DJANGO_SUPERUSER_* non définis) ────"
 fi
 
+# ─── Seed PFE (one-shot pour la démo soutenance) ──────────────────────────
+# Render env var à définir UNE FOIS :  RUN_SEED=1
+# Puis SUPPRIMER la variable après le 1er run réussi pour ne pas re-seeder.
+# Les scripts sont idempotents (get_or_create) mais autant éviter le coût build.
+if [[ "${RUN_SEED:-0}" == "1" ]]; then
+  echo "─── Running seed_data.py (RUN_SEED=1) ────────────────────────────────"
+  # On passe via -c "exec(...)" pour forcer DJANGO_SETTINGS_MODULE=production
+  # même si les scripts hardcodent 'development' (setdefault → no-op si déjà set).
+  python -c "
+import os, django
+os.environ['DJANGO_SETTINGS_MODULE'] = '${DJANGO_SETTINGS_MODULE:-config.settings.production}'
+django.setup()
+exec(open('seed_data.py').read())
+" || echo "⚠️  seed_data.py a échoué (non bloquant)"
+
+  if [[ -f "seed_enrichment.py" ]]; then
+    echo "─── Running seed_enrichment.py ───────────────────────────────────────"
+    python -c "
+import os, django
+os.environ['DJANGO_SETTINGS_MODULE'] = '${DJANGO_SETTINGS_MODULE:-config.settings.production}'
+django.setup()
+exec(open('seed_enrichment.py').read())
+" || echo "⚠️  seed_enrichment.py a échoué (non bloquant)"
+  fi
+else
+  echo "─── Seed skipped (RUN_SEED!=1) ───────────────────────────────────────"
+fi
+
 echo "─── Build terminé ✓ ───────────────────────────────────────────────────"
