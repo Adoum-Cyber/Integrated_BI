@@ -94,17 +94,36 @@ services:
       - key: GROK_API_KEY
         sync: false
 
-  # ───── Frontend Vue 3 (optionnel — décommente si tu veux déployer ici aussi) ─
-  # - type: web
-  #   name: sotifibre-frontend
-  #   runtime: static
-  #   rootDir: integrated-bi-frontend
-  #   buildCommand: "npm ci && npm run build"
-  #   staticPublishPath: ./dist
-  #   envVars:
-  #     - key: VITE_API_BASE_URL
-  #       value: "https://sotifibre-backend.onrender.com"
-  #   routes:
-  #     - type: rewrite
-  #       source: /*
-  #       destination: /index.html
+  # ───── Frontend Vue 3 (static site) ────────────────────────────────────────
+  - type: web
+    name: sotifibre-frontend
+    runtime: static
+    region: frankfurt
+    rootDir: integrated-bi-frontend
+    buildCommand: "npm ci && npm run build"
+    staticPublishPath: ./dist
+    autoDeploy: true
+    pullRequestPreviewsEnabled: false
+
+    envVars:
+      # ⚠️ Le code lit `import.meta.env.VITE_API_URL` (et PAS VITE_API_BASE_URL).
+      - key: VITE_API_URL
+        value: "https://sotifibre-backend.onrender.com"
+      - key: NODE_VERSION
+        value: "20.18.0"
+
+    headers:
+      # Cache long pour les assets hashés Vite
+      - path: /assets/*
+        name: Cache-Control
+        value: "public, max-age=31536000, immutable"
+      # Pas de cache pour index.html (le SPA shell)
+      - path: /index.html
+        name: Cache-Control
+        value: "no-cache, no-store, must-revalidate"
+
+    routes:
+      # Routage SPA : toutes les routes inconnues → index.html (Vue Router prend le relais)
+      - type: rewrite
+        source: /*
+        destination: /index.html
