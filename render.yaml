@@ -27,6 +27,9 @@ services:
     startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
     healthCheckPath: /api/health/
     autoDeploy: true
+    # ⚠️ Ne change PAS startCommand dans le dashboard Render.
+    # Le rootDir est `sotifibre_backend_django`, donc `config.wsgi:application` est CORRECT.
+    # `sotifibre_backend_django.wsgi:application` est FAUX → ModuleNotFoundError.
 
     envVars:
       # ─── Sécurité / Django ────────────────────────────────────────────────
@@ -62,6 +65,16 @@ services:
         value: "60"
       - key: REFRESH_TOKEN_LIFETIME_DAYS
         value: "7"
+
+      # ─── Superuser auto-créé par build.sh au 1er déploiement ──────────────
+      # ⚠️ Renseigner DJANGO_SUPERUSER_PASSWORD manuellement dans le dashboard
+      #    (marqué sync:false pour éviter l'exposition dans le yaml committé)
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: "admin@sotifibre.dz"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: "admin"
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
 
       # ─── Email (optionnel — laisse vide si non utilisé) ───────────────────
       - key: SENDGRID_API_KEY
