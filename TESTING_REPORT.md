@@ -69,9 +69,34 @@ Couverture : **30 tests fonctionnels** (suite complète d'un plan de 50).
 | `2ee73d4` | 5 fichiers `.vue` frontend | Fix silent fails, wrong FK, wrong unread count |
 | `5009b6d` | `PipelinesView.vue` | Hydratation form + display cron custom |
 
+## Tests backend (API directe)
+
+Une suite backend dédiée a aussi été exécutée via TestSprite, en pointant un proxy
+local (`localhost:8000`) vers le backend Render avec un Bearer JWT du compte
+superadmin.
+
+| Élément | Valeur |
+|---|---|
+| Tests générés par TestSprite | 1 |
+| Résultat | 0 / 1 ❌ (échec sur **TC001 — POST /api/users/users/**) |
+
+**Analyse du seul test backend** : le générateur de plan IA a produit une seule
+spécification — la création d'utilisateur côté admin. Le test envoyait un payload
+incomplet (sans `password_confirm`, qui est exigé par `UserCreateSerializer`) →
+le backend a logiquement retourné une 400 avec un message clair. **Ce n'est pas
+un bug applicatif**, c'est le contrat d'API qui est respecté.
+
+**Limite à noter** : sur le plan Starter, la génération du plan backend a été
+extrêmement frugale (1 test vs 50 côté frontend), donc la couverture API directe
+reste très partielle dans ce run automatisé. La validation indirecte des APIs
+reste cependant solide : les 30 tests E2E frontend tapent eux-mêmes le backend
+prod via tous les modules (auth, ETL, dashboards, KPI, notifications, star-schema,
+ML, admin, etc.), avec un taux de réussite de 93 %.
+
 ## Stack de test
 
 - **TestSprite MCP** (plan Starter) — génération + exécution de tests E2E type Playwright
 - **Frontend** : vite preview (production build) sur port 5173
 - **Backend** : Gunicorn + Django sur Render (free tier, cold start ~25-30s)
+- **Proxy local** : `dev_proxy_render.py` (port 8000 → Render) pour la suite backend
 - **Auth** : 4 comptes JWT de démonstration (superadmin, dev BI, analyste, direction)
