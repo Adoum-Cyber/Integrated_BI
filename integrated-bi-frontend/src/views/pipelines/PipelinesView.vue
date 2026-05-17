@@ -122,12 +122,27 @@ interface Pipeline {
   target:                   string
   target_name:              string
   schedule_enabled:         boolean
+  schedule_frequency:       string
   schedule_frequency_display: string
   schedule_cron:            string
   last_execution:           string | null
   last_duration_seconds:    number | null
   total_rows_processed:     number
   success_rate:             number
+  // Optional fields filled in detail/list responses — used to hydrate the edit form
+  notifications_enabled?:   boolean
+  notify_on_success?:       boolean
+  notify_on_failure?:       boolean
+  notify_on_start?:         boolean
+  batch_size?:              number | null
+  timeout_seconds?:         number | null
+  max_errors?:              number | null
+  priority?:                number
+  category?:                string
+  tags?:                    string[]
+  error_strategy?:          string
+  processing_mode?:         string
+  pipeline_type?:           string
 }
 
 // ── Status metadata ────────────────────────────────────────
@@ -450,6 +465,16 @@ function lineClass(from: string, to: string): string {
   return ''
 }
 
+function scheduleLabel(p: Pipeline): string {
+  // Si une fréquence "réelle" (daily, hourly, etc.) est définie, on l'affiche.
+  // Sinon (frequency=manual ou vide), on affiche le cron custom si dispo.
+  if (p.schedule_frequency && p.schedule_frequency !== 'manual' && p.schedule_frequency_display) {
+    return p.schedule_frequency_display
+  }
+  if (p.schedule_cron) return p.schedule_cron
+  return p.schedule_frequency_display || 'Manuel'
+}
+
 function deriveSteps(status: string): { extract: string; transform: string; load: string } {
   if (status === 'active' || status === 'success')
     return { extract: 'success', transform: 'success', load: 'success' }
@@ -567,12 +592,20 @@ function openEditDrawer(p: Pipeline) {
     name: p.name, source: p.source || '', destination: p.target || '',
     schedule_label: p.schedule_frequency_display || 'Manuel',
     cron: p.schedule_cron || '', description: p.description || '',
-    pipeline_type: 'etl', processing_mode: 'batch', error_strategy: 'fail',
-    batch_size: '', timeout_seconds: '', max_errors: '',
-    priority: 5 as number, category: '', tags: '',
-    notifications_enabled: false,
+    pipeline_type: p.pipeline_type || 'etl',
+    processing_mode: p.processing_mode || 'batch',
+    error_strategy: p.error_strategy || 'fail',
+    batch_size: p.batch_size != null ? String(p.batch_size) : '',
+    timeout_seconds: p.timeout_seconds != null ? String(p.timeout_seconds) : '',
+    max_errors: p.max_errors != null ? String(p.max_errors) : '',
+    priority: typeof p.priority === 'number' ? p.priority : 5,
+    category: p.category || '',
+    tags: Array.isArray(p.tags) ? p.tags.join(', ') : '',
+    notifications_enabled: !!p.notifications_enabled,
     retry_max_attempts: '3', retry_backoff_factor: '2.0', retry_delay_seconds: '5',
-    notify_on_success: false, notify_on_start: false, notify_on_failure: true,
+    notify_on_success: !!p.notify_on_success,
+    notify_on_start: !!p.notify_on_start,
+    notify_on_failure: p.notify_on_failure !== undefined ? !!p.notify_on_failure : true,
   }
   drawerOpen.value = true
 }
@@ -996,7 +1029,7 @@ onMounted(() => {
         <div class="pl-schedule">
           <CalendarClock :size="12" class="sched-icon" />
           <div>
-            <p class="sched-label">{{ pl.schedule_frequency_display || (pl.schedule_cron ? pl.schedule_cron : 'Manuel') }}</p>
+            <p class="sched-label">{{ scheduleLabel(pl) }}</p>
             <p class="sched-last">{{ pl.last_execution ? timeAgo(pl.last_execution) : 'Jamais' }}</p>
           </div>
         </div>
