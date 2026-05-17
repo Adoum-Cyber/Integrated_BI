@@ -114,11 +114,44 @@ Aucun n'est un bug backend. Tous trois sont des artefacts de la génération AI 
    → 4 segments au lieu de 3 → token invalide côté Django → 403. C'est un **bug de la
    pipeline de génération de TestSprite**, indépendant du code applicatif.
 
-### Validation indirecte
+### Round 3 — depuis l'OpenAPI spec officielle (349 endpoints)
+
+Une 3e itération a été tentée en alimentant TestSprite avec le `code_summary.yaml`
+extrait automatiquement depuis `SOTIFibre Platform API (v1).yaml` (script
+`openapi_to_code_summary.py`). Couverture théorique élargie à 244 endpoints
+documentés avec leurs request_body et types.
+
+- **Tests générés** : 10 (cap Starter)
+- **Résultat** : 2 PASS / 10 (20 %)
+
+**Cause des 8 échecs** : le générateur de tests AI a inventé des valeurs pour
+le champ enum `source_type` (`database`, `sql`, `mock`) qui ne sont pas dans
+la liste valide (`postgresql`, `mysql`, `csv`, `mongodb`, `rest_api`, etc.).
+Tous les tests qui essaient de créer une `DataSource` en amont échouent
+en cascade. Encore une fois : **pas un bug backend**, mais un échec du
+générateur AI à lire les enums depuis le PRD.
+
+**Conclusion sur la stratégie de génération de PRD pour TestSprite** :
+
+| Approche | Taille PRD | Précision contrats | Hit rate |
+|---|---|---|---|
+| Manuel basique (round 1) | ~3 KB | Vague | 0 % |
+| Manuel détaillé (round 2) | ~12 KB | Champs requis listés | **70 %** ⭐ |
+| OpenAPI complet (round 3) | 54 KB | Liste mais sans enum exhaustifs | 20 % |
+
+Le sweet spot est le PRD manuel détaillé : assez de précision pour que les tests
+soient valides, sans tellement de surface que le générateur perde le fil sur les
+valeurs des enums. L'OpenAPI brut a trop de bruit pour la qualité de l'AI sur
+le plan Starter.
+
+### Validation indirecte (qui reste la plus solide)
 
 En complément, **les 30 tests E2E frontend tapent toute l'API en prod** via les modules
 auth, ETL, dashboards, KPI, notifications, star-schema, ML, admin — avec **93 % de
-réussite**. C'est la garantie principale que le backend fonctionne.
+réussite**. C'est la garantie principale que le backend fonctionne, parce que
+ces tests exercent l'API à travers de vrais scénarios utilisateur (login, CRUD,
+filtres, agrégations), avec des payloads validés par la VueJS — et non par un
+générateur AI qui hallucine les enums.
 
 ## Stack de test
 
