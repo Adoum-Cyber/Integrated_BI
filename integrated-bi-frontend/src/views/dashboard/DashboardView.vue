@@ -820,7 +820,7 @@ onMounted(() => {
 .feed-skel::after {
   content: '';
   flex: 1;
-  height: 38px;
+  height: 40px;
   border-radius: var(--radius-sm);
   background: linear-gradient(90deg, var(--surface-overlay) 25%, var(--surface-muted) 50%, var(--surface-overlay) 75%);
   background-size: 200% 100%;

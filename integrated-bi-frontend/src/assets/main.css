@@ -76,6 +76,14 @@
   --z-modal:    400;
   --z-toast:    500;
   --z-tooltip:  600;
+
+  /* Shadows — composed values, tinted toward base navy */
+  --shadow-sm:     0 1px 3px oklch(0% 0 0 / 0.25);
+  --shadow-md:     0 4px 16px oklch(5% 0.01 258 / 0.3);
+  --shadow-lg:     0 8px 32px oklch(5% 0.01 258 / 0.4);
+  --shadow-xl:     0 20px 60px oklch(0% 0 0 / 0.5);
+  --shadow-accent: 0 4px 16px oklch(76% 0.14 62 / 0.28);
+  --shadow-focus:  0 0 0 3px oklch(76% 0.14 62 / 0.12);
 }
 
 /* ─── Reset ──────────────────────────────────────────────── */
@@ -147,4 +155,14 @@ body {
 .slide-down-enter-from {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+/* ─── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto !important; }
 }

@@ -1870,13 +1870,13 @@ onMounted(() => {
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
-  min-height: 38px;
+  min-height: 40px;
   transition: background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: oklch(80% 0.14 62);
-  box-shadow: 0 4px 16px oklch(76% 0.14 62 / 0.28);
+  box-shadow: var(--shadow-accent);
 }
 
 .btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
@@ -1893,7 +1893,7 @@ onMounted(() => {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-secondary);
-  min-height: 38px;
+  min-height: 40px;
   transition: border-color 150ms ease, color 150ms ease;
 }
 
@@ -1969,7 +1969,7 @@ onMounted(() => {
 
 .search-input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 var(--sp-4) 0 34px;
   background-color: var(--surface-raised);
   border: 1px solid var(--border-default);
@@ -1990,7 +1990,7 @@ onMounted(() => {
 .filter-select,
 .form-select {
   appearance: none;
-  height: 38px;
+  height: 40px;
   padding: 0 30px 0 var(--sp-3);
   background-color: var(--surface-raised);
   border: 1px solid var(--border-default);
@@ -2507,7 +2507,7 @@ onMounted(() => {
   width: 100%;
 }
 
-.form-input:focus { border-color: var(--accent-dim); box-shadow: 0 0 0 3px oklch(76% 0.14 62 / 0.12); }
+.form-input:focus { border-color: var(--accent-dim); box-shadow: var(--shadow-focus); }
 .form-input::placeholder { color: var(--text-muted); }
 
 /* ── Schedule grid ───────────────────────────────────────── */

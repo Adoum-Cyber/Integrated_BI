@@ -798,13 +798,13 @@ onMounted(fetchViz)
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: 600;
-  min-height: 38px;
+  min-height: 40px;
   white-space: nowrap;
   transition: background-color 150ms, box-shadow 150ms;
 }
 .btn-primary:hover:not(:disabled) {
   background-color: oklch(80% 0.14 62);
-  box-shadow: 0 4px 16px oklch(76% 0.14 62 / 0.28);
+  box-shadow: var(--shadow-accent);
 }
 .btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
 .btn-primary--loading { min-width: 90px; justify-content: center; }
@@ -822,12 +822,12 @@ onMounted(fetchViz)
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-secondary);
-  min-height: 38px;
+  min-height: 40px;
   transition: border-color 150ms, color 150ms;
 }
 .btn-ghost:hover { border-color: var(--border-strong); color: var(--text-primary); }
 
-.btn-icon { padding: var(--sp-2); min-height: unset; width: 38px; height: 38px; justify-content: center; }
+.btn-icon { padding: var(--sp-2); min-height: unset; width: 40px; height: 40px; justify-content: center; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .btn-icon--spinning svg { animation: spin 0.7s linear infinite; }
 
@@ -899,7 +899,7 @@ onMounted(fetchViz)
 
 .search-input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 var(--sp-4) 0 34px;
   background: var(--surface-raised);
   border: 1px solid var(--border-default);
@@ -917,7 +917,7 @@ onMounted(fetchViz)
 
 .filter-select {
   appearance: none;
-  height: 38px;
+  height: 40px;
   padding: 0 30px 0 var(--sp-3);
   background: var(--surface-raised);
   border: 1px solid var(--border-default);
@@ -1404,7 +1404,7 @@ onMounted(fetchViz)
   outline: none;
   transition: border-color 150ms;
 }
-.form-input:focus { border-color: var(--accent-dim); box-shadow: 0 0 0 3px oklch(76% 0.14 62 / 0.12); }
+.form-input:focus { border-color: var(--accent-dim); box-shadow: var(--shadow-focus); }
 .form-input::placeholder { color: var(--text-muted); }
 
 /* Type picker grid */

@@ -406,7 +406,7 @@ async function handleSubmit() {
 
 .field-input:focus {
   border-color: var(--accent-dim);
-  box-shadow: 0 0 0 3px oklch(76% 0.14 62 / 0.15);
+  box-shadow: var(--shadow-focus);
 }
 
 .field--error .field-input {
