@@ -30,6 +30,7 @@ from apps.data_sources.models import DataSource, DataTable
 from apps.data_warehouse.models import (
     DataWarehouseSchema, DataWarehouseTable,
     FactTable, DimensionTable, Measure,
+    DataWarehouseLog, DataWarehouseMetric, AggregationTable,
 )
 from apps.etl_engine.models import ETLPipeline, ExecutionLog
 from apps.star_schema.models import DimensionalSchema
@@ -51,6 +52,10 @@ DimensionalSchema.objects.all().delete()
 Measure.objects.all().delete()
 ExecutionLog.objects.all().delete()
 ETLPipeline.objects.all().delete()
+# IMPORTANT: enfants AVANT parents pour respecter les FK
+DataWarehouseLog.objects.all().delete()       # FK → DataWarehouseTable
+DataWarehouseMetric.objects.all().delete()    # FK → DataWarehouseTable
+AggregationTable.objects.all().delete()       # FK → DataWarehouseTable
 DataWarehouseTable.objects.all().delete()
 DataWarehouseSchema.objects.all().delete()
 DataTable.objects.all().delete()

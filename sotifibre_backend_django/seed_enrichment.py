@@ -182,7 +182,6 @@ for name, kpi_type, target, warn, crit, unit in KPIS:
             'warning_threshold': warn,
             'critical_threshold': crit,
             'unit': unit,
-            'owner': admin,
             'description': f"KPI {name} — objectif PFE Sotifibre 2026.",
         },
     )
