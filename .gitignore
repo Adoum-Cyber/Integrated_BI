@@ -61,3 +61,44 @@ _tmp_Integrated_BI/
 # ── TestSprite ──────────────────────────────────────────────
 testsprite_tests/
 PRD_TestSprite.md
+
+# ── Fichiers exclus définitivement (cleanup 2026-05-17) ──────
+# Scripts dev temporaires
+fix_admin.py
+fix_cleanup.py
+fix_conn.py
+fix_kpi.py
+fix_seed_import.py
+fix_urls.py
+test_api.py
+test_api_script.py
+update_seed_and_sandbox.py
+
+# Dumps DB
+sotifibre_db/
+*.sql.gz
+*.dump
+
+# Images à la racine (les conserver dans docs/ si besoin)
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.avif
+/*.svg
+
+# Notes privées et secrets
+mot de passe*.txt
+mot_de_passe*.txt
+*password*.txt
+les prompts pour les*
+
+# Chapitres PFE (docs locaux uniquement)
+*.docx
+*.doc
+*.pdf
+
+# Scripts ad-hoc créés pour le nettoyage
+cleanup_repo.py
+generate_chapter5.py
