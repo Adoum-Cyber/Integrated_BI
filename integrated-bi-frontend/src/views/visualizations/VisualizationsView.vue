@@ -150,6 +150,7 @@ const viewMode       = ref<ViewMode>('grid')
 const drawerOpen     = ref(false)
 const deleteConfirm  = ref<string | number | null>(null)
 const submitting     = ref(false)
+const submitError    = ref<string>('')
 const listVisible    = ref(false)
 const lastUpdated    = ref(new Date())
 const refreshing     = ref(false)
@@ -290,6 +291,7 @@ function duplicateViz(v: Visualization) {
 
 function openDrawer() {
   editViz.value = null
+  submitError.value = ''
   form.value = { name: '', type: 'line', source: '', description: '', dashboard: '' }
   drawerOpen.value = true
   if (dashboardOptions.value.length === 0) fetchDashboardOptions()
@@ -297,6 +299,7 @@ function openDrawer() {
 
 function openEdit(viz: Visualization) {
   editViz.value = viz
+  submitError.value = ''
   form.value = { name: viz.name, type: viz.type, source: viz.source, description: viz.description || '', dashboard: '' }
   drawerOpen.value = true
   if (dashboardOptions.value.length === 0) fetchDashboardOptions()
@@ -308,7 +311,12 @@ function openPreview(viz: Visualization) {
 
 async function submitForm() {
   if (!form.value.name.trim()) return
+  if (!editViz.value && !form.value.dashboard) {
+    submitError.value = 'Veuillez choisir un dashboard pour cette visualisation.'
+    return
+  }
   submitting.value = true
+  submitError.value = ''
   try {
     if (editViz.value) {
       await api.patch(`/api/visualizations/widgets/${editViz.value.id}/`, {
@@ -320,15 +328,24 @@ async function submitForm() {
         name:        form.value.name,
         widget_type: 'chart',
         description: form.value.description,
-        dashboard:   form.value.dashboard || null,
+        dashboard:   form.value.dashboard,
       })
     }
     await fetchViz()
-  } catch { /* ignore */ }
-  finally {
-    submitting.value = false
     drawerOpen.value = false
     editViz.value = null
+  } catch (e: unknown) {
+    const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[] | string> } } }
+    const errs = err?.response?.data?.errors
+    if (errs && typeof errs === 'object') {
+      submitError.value = Object.entries(errs)
+        .map(([k, v]) => `${k} : ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join(' · ')
+    } else {
+      submitError.value = err?.response?.data?.message || 'Erreur lors de l\'enregistrement.'
+    }
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -726,6 +743,10 @@ onMounted(fetchViz)
                 type="text"
                 placeholder="Brève description…"
               />
+            </div>
+
+            <div v-if="submitError" class="viz-form-error" role="alert">
+              {{ submitError }}
             </div>
 
             <div class="drawer-footer">
@@ -1451,6 +1472,17 @@ onMounted(fetchViz)
   margin-top: auto;
   border-top: 1px solid var(--border-subtle);
   flex-shrink: 0;
+}
+
+.viz-form-error {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: color-mix(in oklab, var(--danger, #dc2626) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--danger, #dc2626) 35%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--danger, #dc2626);
+  font-size: 13px;
+  word-break: break-word;
 }
 
 @keyframes spin-sm { to { transform: rotate(360deg); } }

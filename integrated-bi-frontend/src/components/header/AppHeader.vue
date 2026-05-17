@@ -57,7 +57,7 @@ async function fetchNotifPreview() {
     ])
     const rows = Array.isArray(listRes.data?.results) ? listRes.data.results : Array.isArray(listRes.data) ? listRes.data : []
     notifs.value = rows
-    unreadCount.value = countRes.data?.count ?? countRes.data?.unread_count ?? 0
+    unreadCount.value = countRes.data?.data?.count ?? countRes.data?.count ?? countRes.data?.unread_count ?? 0
   } catch {
     notifs.value = []
     unreadCount.value = 0

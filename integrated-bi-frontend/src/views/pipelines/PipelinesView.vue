@@ -117,7 +117,9 @@ interface Pipeline {
   pipeline_type_display:    string
   status:                   string
   status_display:           string
+  source:                   string
   source_name:              string
+  target:                   string
   target_name:              string
   schedule_enabled:         boolean
   schedule_frequency_display: string
@@ -562,7 +564,7 @@ function openEditDrawer(p: Pipeline) {
   formError.value = null
   nameTouched.value = true   // un pipeline existant a déjà un nom — on ne le réécrit pas
   form.value = {
-    name: p.name, source: p.source_name || '', destination: p.target_name || '',
+    name: p.name, source: p.source || '', destination: p.target || '',
     schedule_label: p.schedule_frequency_display || 'Manuel',
     cron: p.schedule_cron || '', description: p.description || '',
     pipeline_type: 'etl', processing_mode: 'batch', error_strategy: 'fail',
