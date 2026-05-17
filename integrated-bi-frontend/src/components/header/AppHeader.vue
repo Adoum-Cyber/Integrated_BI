@@ -79,10 +79,15 @@ function openNotifications() {
 
 onMounted(fetchNotifPreview)
 
-function handleLogout() {
-  auth.logout()
+function goToProfile() {
   showUserMenu.value = false
-  router.push('/login')
+  router.push('/profile')
+}
+
+function handleLogout() {
+  showUserMenu.value = false
+  auth.logout()
+  router.replace('/login')
 }
 
 const routeLabels: Record<string, string> = {
@@ -208,7 +213,7 @@ const userName = computed(() => {
               <span class="dropdown-role">{{ auth.user?.role ?? 'Analyste BI' }}</span>
             </div>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item" role="menuitem" @click="showUserMenu = false">
+            <button class="dropdown-item" role="menuitem" @click="goToProfile">
               <User :size="15" />
               <span>Mon profil</span>
             </button>
