@@ -71,27 +71,54 @@ Couverture : **30 tests fonctionnels** (suite complète d'un plan de 50).
 
 ## Tests backend (API directe)
 
-Une suite backend dédiée a aussi été exécutée via TestSprite, en pointant un proxy
+Une suite backend dédiée a été exécutée via TestSprite, en pointant un proxy
 local (`localhost:8000`) vers le backend Render avec un Bearer JWT du compte
 superadmin.
 
-| Élément | Valeur |
-|---|---|
-| Tests générés par TestSprite | 1 |
-| Résultat | 0 / 1 ❌ (échec sur **TC001 — POST /api/users/users/**) |
+### Round 1 — plan minimal
+- **1 test généré, 0 PASS** (le test envoyait un payload utilisateur incomplet,
+  sans `password_confirm` exigé par `UserCreateSerializer` → 400 légitime).
 
-**Analyse du seul test backend** : le générateur de plan IA a produit une seule
-spécification — la création d'utilisateur côté admin. Le test envoyait un payload
-incomplet (sans `password_confirm`, qui est exigé par `UserCreateSerializer`) →
-le backend a logiquement retourné une 400 avec un message clair. **Ce n'est pas
-un bug applicatif**, c'est le contrat d'API qui est respecté.
+### Round 2 — après enrichissement du `code_summary.yaml` avec contrats explicites
+- **10 tests générés, 7 PASS (70 %)**
 
-**Limite à noter** : sur le plan Starter, la génération du plan backend a été
-extrêmement frugale (1 test vs 50 côté frontend), donc la couverture API directe
-reste très partielle dans ce run automatisé. La validation indirecte des APIs
-reste cependant solide : les 30 tests E2E frontend tapent eux-mêmes le backend
-prod via tous les modules (auth, ETL, dashboards, KPI, notifications, star-schema,
-ML, admin, etc.), avec un taux de réussite de 93 %.
+| Test | Statut | Cause de l'échec (si fail) |
+|---|---|---|
+| TC001 — POST /api/auth/jwt/token/ (login) | ✅ PASS | — |
+| TC002 — POST /api/auth/jwt/refresh/ | ✅ PASS | — |
+| TC003 — POST /api/auth/jwt/verify/ | ❌ FAIL | Test attend `{detail}` (DRF default) mais notre handler custom renvoie `{status, message, code}` |
+| TC004 — POST /api/users/users/ (create user) | ✅ PASS | — |
+| TC005 — GET /api/users/users/me/ | ✅ PASS | — |
+| TC006 — POST /api/users/roles/ | ❌ FAIL | Test attend wrapper `{status, data}` mais endpoint CRUD DRF renvoie raw |
+| TC007 — POST /api/users/teams/ | ✅ PASS | — |
+| TC008 — POST /api/data-sources/sources/{id}/test-connection/ | ✅ PASS | — |
+| TC009 — POST /api/data-sources/queries/{id}/execute/ | ✅ PASS | Notre fix 500→400 valide |
+| TC010 — POST /api/etl/pipelines/ | ❌ FAIL | Token JWT corrompu dans le code test généré (4 parts au lieu de 3) → 403 |
+
+### Analyse des 3 échecs
+
+Aucun n'est un bug backend. Tous trois sont des artefacts de la génération AI des tests :
+
+1. **TC003** — Le test code-généré attendait le format d'erreur DRF par défaut `{detail: "..."}`,
+   alors que `apps/core/responses.py` retourne `{status, message, errors, code}` partout
+   via un exception handler custom. Ce wrapper *est* documenté dans le PRD, mais le générateur
+   l'a ignoré sur ce test précis.
+
+2. **TC006** — Le test attendait un wrapper `success_response` pour le POST de role.
+   Or, seuls les `@action` custom utilisent ce wrapper ; les endpoints CRUD standards de
+   `ModelViewSet` retournent du JSON DRF brut. C'est une **inconsistance documentaire** :
+   le PRD pourrait être plus clair là-dessus, mais ce n'est pas un bug.
+
+3. **TC010** — Le token JWT injecté dans le code test est **dupliqué au début** :
+   `eyJhbG...JIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbG...JIUzI1NiIsInR5cCI6IkpXVCJ9.<payload>.<sig>`
+   → 4 segments au lieu de 3 → token invalide côté Django → 403. C'est un **bug de la
+   pipeline de génération de TestSprite**, indépendant du code applicatif.
+
+### Validation indirecte
+
+En complément, **les 30 tests E2E frontend tapent toute l'API en prod** via les modules
+auth, ETL, dashboards, KPI, notifications, star-schema, ML, admin — avec **93 % de
+réussite**. C'est la garantie principale que le backend fonctionne.
 
 ## Stack de test
 
